@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#Read given discography list into an array
+readarray -t tolist < "$1"
+
+for i in "${tolist[@]}"
+do 
+	#Find directories that include artist i
+	#Then find all audio files in the previously found directories
+	find $PWD -name "$i" -exec \
+		find {} -regextype posix-extended -regex '.*\.(flac|mp3|aac|wav|ape|ogg)' \; \
+		| sort > "$i".m3u
+	echo "Created "$i".m3u"
+	#Switch forward slashes for backslashes
+	sed -i 's_/_\\_g' "$i".m3u
+	#Append 'a:\' to each line, as required for the HiBy R3 Pro
+	sed -i 's/.*/a:\\&/' "$i".m3u
+done
+
+#Move generated m3u files, if a directory is provided
+if [ "$#" -eq 2 ] && [ -d "$2" ]
+then
+	mv *.m3u "$2"
+fi
